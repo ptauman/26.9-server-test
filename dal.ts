@@ -12,10 +12,10 @@ export interface Beeper {
     id?: string,
     name: string,
     status?: Status,
-    crationDate?: Date
-    explosionDate?: Date
-    latitudePoint? : number
-    longitudePoint? : number
+    created_at?: Date
+    detonated_at?: Date
+    latitude? : number
+    longitude? : number
 }
 //שליפת כל הביפרים
 export async function getBeepersFromJson() {

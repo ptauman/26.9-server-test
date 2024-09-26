@@ -19,14 +19,17 @@ export async function getAllBeepers(req : Request, res : Response) {
 //יצירת ביפר חדש
 export async function createBeeper(req : Request, res : Response) {
     try{
+        const data = req.body
+        if (!data) {res.status(400).send("bad request. missing data"); return}
+        if (!data.name) {res.status(400).send("bad request. missing name"); return}
         //קביעת הערכים הבסיסיים של הביפר
         const beeper: dal.Beeper = {
             //ייבוא מספר גנרי מפונקציה חיצונית
             id: external.generateUUID(),
-            name: "a",
+            name: data.name,
             status: dal.Status.manufactured,
             //קביעת זמן הייצור לרגע זה
-            crationDate: new Date(),   
+            created_at: new Date(),   
         }
         //תשובה למשתמש בהתאם למה שחזר מהדאל כולל טיפול בשגיאות
         const answer = await dal.createBeeper(beeper)

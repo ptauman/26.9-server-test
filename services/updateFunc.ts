@@ -24,18 +24,18 @@ export async function changeStatus(beeper: dal.Beeper, data: any){
 //פונקציה לבדיקת עדכון פריסה
 function deployedVais(beeper: dal.Beeper, data: any): boolean {
     //בדיקה שהמשתמש שלח מיקומים
-    if (!data.latitudePoint || !data.longitudePoint)
+    if (!data.latitude || !data.longitude)
         {return false}
     //בדיקה שהמיקומים תקינים
-    if (data.latitudePoint <33 || data.latitudePoint > 35 || data.longitudePoint < 35 || data.longitudePoint > 36)
+    if (data.latitude <33 || data.latitude > 35 || data.longitude < 35 || data.longitude > 36)
         {return false}
     return true
 }
 //פונקציה לביצוע פריסה
 function updatDeployed(beeper: dal.Beeper, data: any): dal.Beeper {
     //עדכון הנקודות המתאימות
-    beeper.latitudePoint = data.latitudePoint
-    beeper.longitudePoint = data.longitudePoint
+    beeper.latitude = data.latitude
+    beeper.longitude = data.longitude
     //עדכון הסטטוס
     beeper.status = dal.Status.deployed
     //קריאה לפונקציית הטיימר שתיהיה אחראית להמשך התהליך
@@ -63,7 +63,7 @@ async function updateDetoneted(beeper: dal.Beeper) {
         if(!currentbeeper){return}
         //עדכון הסטטוס וזמן החיסול
         currentbeeper.status = dal.Status.detonated
-        currentbeeper.explosionDate = new Date()
+        currentbeeper.detonated_at = new Date()
         //קריאה לפונקציית הדאטאבייס שתשמור את השינויים
         dal.updateBeeper(beeper.id, currentbeeper)
     }
