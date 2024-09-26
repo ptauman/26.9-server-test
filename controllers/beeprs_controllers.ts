@@ -112,11 +112,11 @@ export async function getBeepersByStatus(req : Request, res : Response) {
         const status : string = req.params.status
         if (!status) 
             {res.status(400).send("bad request. missing status"); return}
-        //בדיקה שהסטטוס תקין
-        if (status !== "manufactured" && status !== "assembled" && status !== "shipped" && status !== "deployed" && status !== "detonated")
+         const convertToStatus = external.convertToStatus(status)
+         if (!convertToStatus) 
             {res.status(400).send("bad request. wrong status"); return}
         //קבלת כלל הביפרים לפי סטטוס
-        const beepers : dal.Beeper[] = await dal.getBeepersByStatus(dal.Status[status])|| []
+        const beepers : dal.Beeper[] = await dal.getBeepersByStatus(convertToStatus) || []
         //בדיקה שאכן קיבלנו משהו תקין והודעה למשתמש
         if (!beepers) 
             {res.status(404).send("sorry. we don't found beepers for this status"); return}

@@ -42,14 +42,13 @@ exports.createBeeper = createBeeper;
 exports.updateBeeper = updateBeeper;
 exports.deleteBeeper = deleteBeeper;
 const jsonfile = __importStar(require("jsonfile"));
-var Status;
-(function (Status) {
-    Status[Status["manufactured"] = 0] = "manufactured";
-    Status[Status["assembled"] = 1] = "assembled";
-    Status[Status["shipped"] = 2] = "shipped";
-    Status[Status["deployed"] = 3] = "deployed";
-    Status[Status["detonated"] = 4] = "detonated";
-})(Status || (exports.Status = Status = {}));
+exports.Status = {
+    manufactured: "manufactured",
+    assembled: "assembled",
+    shipped: "shipped",
+    deployed: "deployed",
+    detonated: "detonated"
+};
 //שליפת כל הביפרים
 function getBeepersFromJson() {
     return __awaiter(this, void 0, void 0, function* () {

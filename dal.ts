@@ -1,17 +1,32 @@
 import exp from 'constants'
 import * as jsonfile from 'jsonfile'
 
-export enum Status {
-    manufactured,
-    assembled,
-    shipped,
-    deployed,
-    detonated
+// export enum Status {
+//     manufactured,
+//     assembled,
+//     shipped,
+//     deployed,
+//     detonated
+// }
+export interface statusType {
+    manufactured : string,
+    assembled : string,
+    shipped : string,
+    deployed : string,
+    detonated : string
 }
+export const Status : statusType = {
+    manufactured : "manufactured",
+    assembled : "assembled",
+    shipped : "shipped",
+    deployed : "deployed",
+    detonated : "detonated"
+}
+
 export interface Beeper {
     id?: string,
     name: string,
-    status?: Status,
+    status?: string,
     created_at?: Date
     detonated_at?: Date
     latitude? : number
@@ -61,7 +76,7 @@ export async function getBeepersById(id: string) {
     return beeper
 }
 //שליפת ביפרים לפי סטטוס
-export async function getBeepersByStatus(status: Status) {
+export async function getBeepersByStatus(status: string) {
     //קבלת כל הביפרים
     const beepers : Beeper[] = await getBeepersFromJson()
     if (!beepers) {return null}
