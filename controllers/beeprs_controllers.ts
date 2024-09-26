@@ -74,8 +74,11 @@ export async function updateBeeperById(req : Request, res : Response) {
         //קריאה לפונקציה שתבצע עדכון
         const midelAnswer = await updateFumc.changeStatus(beeper,data)
         //במידה וחזרה שגיאה להחזיר אותה למשתמש
-        if (!midelAnswer) 
-            {res.status(404).send("bad request. missing latitudePoint or longitudePoint or aut off range"); return}    
+        if (typeof midelAnswer === "string")
+            {//במידה ולא חזרה שגיאה אלא המשתמש דילג שלב
+            if(midelAnswer === "You chose to speed up the elimination and bypass the timer")
+                {res.status(200).send(midelAnswer); return}
+            res.status(400).send(midelAnswer); return}    
         //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס
         const answer = await dal.updateBeeper(userId, midelAnswer)
         //עדכון המשתמש בעניין השמירה

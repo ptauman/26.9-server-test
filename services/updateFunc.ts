@@ -1,7 +1,7 @@
 //ייבוא הדאל
 import * as dal from "../dal"
 //פונקצהי לשינוי סטטוס
-export async function changeStatus(beeper: dal.Beeper, data: any){
+export async function changeStatus(beeper: dal.Beeper, data: any): Promise<dal.Beeper | string> {
     //תגובה בהתאם לסטטוס קיים
     switch (beeper.status) {
         case dal.Status.manufactured: 
@@ -11,12 +11,19 @@ export async function changeStatus(beeper: dal.Beeper, data: any){
         case dal.Status.shipped: 
             {//במידה והסטטוס הוא "נשלח" נפנה לפונקציה שתבדוק האם אפשר להעביר לססטוס הבא 
                 if (!deployedVais(beeper, data)) 
-                    { return null }
+                    { return "Location points located in Lebanon must be filled" }
                 //נקרא לפונקציה שתעביר לססטטוס "נפרס" 
                 beeper = updatDeployed(beeper, data)
                 break
             }
-            //בכל מקרה אחר כולל שני הסטטוסים האחרונים לא נעשה דבר 
+            //במידה והמשתמש בחר לעקוף את הטיימר
+        case dal.Status.deployed:         
+            {
+                updateDetoneted(beeper)
+                return "You chose to speed up the elimination and bypass the timer"}
+                //במידה והוא מנסה להעביר סטטוס אחרי שכבר הגענו לקצה
+        case dal.Status.detonated:
+                {return "Sorry but we have no control over hell"}
         default: {break }
     }//במידה והכל תקין נחזיר את הביפר העדכני
     return beeper

@@ -64,14 +64,23 @@ function getAllBeepers(req, res) {
 function createBeeper(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const data = req.body;
+            if (!data) {
+                res.status(400).send("bad request. missing data");
+                return;
+            }
+            if (!data.name) {
+                res.status(400).send("bad request. missing name");
+                return;
+            }
             //קביעת הערכים הבסיסיים של הביפר
             const beeper = {
                 //ייבוא מספר גנרי מפונקציה חיצונית
                 id: external.generateUUID(),
-                name: "a",
+                name: data.name,
                 status: dal.Status.manufactured,
                 //קביעת זמן הייצור לרגע זה
-                crationDate: new Date(),
+                created_at: new Date(),
             };
             //תשובה למשתמש בהתאם למה שחזר מהדאל כולל טיפול בשגיאות
             const answer = yield dal.createBeeper(beeper);
@@ -131,8 +140,12 @@ function updateBeeperById(req, res) {
             //קריאה לפונקציה שתבצע עדכון
             const midelAnswer = yield updateFumc.changeStatus(beeper, data);
             //במידה וחזרה שגיאה להחזיר אותה למשתמש
-            if (!midelAnswer) {
-                res.status(404).send("bad request. missing latitudePoint or longitudePoint or aut off range");
+            if (typeof midelAnswer === "string") { //במידה ולא חזרה שגיאה אלא המשתמש דילג שלב
+                if (midelAnswer === "You chose to speed up the elimination and bypass the timer") {
+                    res.status(200).send(midelAnswer);
+                    return;
+                }
+                res.status(400).send(midelAnswer);
                 return;
             }
             //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס

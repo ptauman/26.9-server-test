@@ -53,13 +53,23 @@ function changeStatus(beeper, data) {
             case dal.Status.shipped:
                 { //במידה והסטטוס הוא "נשלח" נפנה לפונקציה שתבדוק האם אפשר להעביר לססטוס הבא 
                     if (!deployedVais(beeper, data)) {
-                        return null;
+                        return "Location points located in Lebanon must be filled";
                     }
                     //נקרא לפונקציה שתעביר לססטטוס "נפרס" 
                     beeper = updatDeployed(beeper, data);
                     break;
                 }
-            //בכל מקרה אחר כולל שני הסטטוסים האחרונים לא נעשה דבר 
+            //במידה והמשתמש בחר לעקוף את הטיימר
+            case dal.Status.deployed:
+                {
+                    updateDetoneted(beeper);
+                    return "You chose to speed up the elimination and bypass the timer";
+                }
+            //במידה והוא מנסה להעביר סטטוס אחרי שכבר הגענו לקצה
+            case dal.Status.detonated:
+                {
+                    return "Sorry but we have no control over hell";
+                }
             default: {
                 break;
             }
@@ -70,11 +80,11 @@ function changeStatus(beeper, data) {
 //פונקציה לבדיקת עדכון פריסה
 function deployedVais(beeper, data) {
     //בדיקה שהמשתמש שלח מיקומים
-    if (!data.latitudePoint || !data.longitudePoint) {
+    if (!data.latitude || !data.longitude) {
         return false;
     }
     //בדיקה שהמיקומים תקינים
-    if (data.latitudePoint < 33 || data.latitudePoint > 35 || data.longitudePoint < 35 || data.longitudePoint > 36) {
+    if (data.latitude < 33 || data.latitude > 35 || data.longitude < 35 || data.longitude > 36) {
         return false;
     }
     return true;
@@ -82,8 +92,8 @@ function deployedVais(beeper, data) {
 //פונקציה לביצוע פריסה
 function updatDeployed(beeper, data) {
     //עדכון הנקודות המתאימות
-    beeper.latitudePoint = data.latitudePoint;
-    beeper.longitudePoint = data.longitudePoint;
+    beeper.latitude = data.latitude;
+    beeper.longitude = data.longitude;
     //עדכון הסטטוס
     beeper.status = dal.Status.deployed;
     //קריאה לפונקציית הטיימר שתיהיה אחראית להמשך התהליך
@@ -118,7 +128,7 @@ function updateDetoneted(beeper) {
             }
             //עדכון הסטטוס וזמן החיסול
             currentbeeper.status = dal.Status.detonated;
-            currentbeeper.explosionDate = new Date();
+            currentbeeper.detonated_at = new Date();
             //קריאה לפונקציית הדאטאבייס שתשמור את השינויים
             dal.updateBeeper(beeper.id, currentbeeper);
         }
