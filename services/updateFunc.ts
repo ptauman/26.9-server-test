@@ -51,6 +51,7 @@ async function updateDetoneted(beeper: dal.Beeper) {
         if(!currentbeeper){return}
         currentbeeper.status = dal.Status.detonated
         currentbeeper.explosionDate = new Date()
+        dal.updateBeeper(beeper.id, currentbeeper)
     }
     catch{
         return;
