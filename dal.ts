@@ -58,8 +58,14 @@ export async function getBeepersByStatus(status: Status) {
     return foundBeepers
 }
 export async function createBeeper(beeper : Beeper){
-    const beepers : Beeper[] = await getBeepersFromJson()
-    if (!beepers) {return false}
+    let beepers : Beeper[] = await getBeepersFromJson()
+    if (!beepers) 
+        { 
+            const newBeeprs:Beeper[] = []
+            const newAnswer : boolean = await createBeepersJson(newBeeprs)
+            if (!newAnswer) {return null}
+            beepers = await getBeepersFromJson()           
+        }
     beepers.push(beeper)
     const answer : boolean = await createBeepersJson(beepers)
     return answer

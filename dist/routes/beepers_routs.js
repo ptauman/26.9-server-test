@@ -31,4 +31,8 @@ const beepersController = __importStar(require("../controllers/beeprs_controller
 const router = express_1.default.Router();
 router.post(`/`, beepersController.createBeeper);
 router.get(`/`, beepersController.getAllBeepers);
+router.get(`/:id`, beepersController.getBeepersById);
+router.put(`/:id/status`, beepersController.updateBeeperById);
+router.delete(`/:id`, beepersController.deleteBeepersById);
+router.get(`/status/:status`, beepersController.getBeepersByStatus);
 exports.default = router;

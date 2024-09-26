@@ -64,5 +64,6 @@ export async function getBeepersByStatus(req : Request, res : Response) {
         {res.status(400).send("bad request. wrong status"); return}
     const beepers : dal.Beeper[] = await dal.getBeepersByStatus(dal.Status[status])|| []
     if (!beepers) {res.status(404).send("sorry. we don't found beepers for this status"); return}
+    if (beepers.length === 0) {res.status(404).send("sorry. we don't found beepers for this status"); return}
     res.send(beepers)
 }
