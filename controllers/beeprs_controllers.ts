@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import * as dal from "../dal"
+import * as external from "../services/externalFunc";
+import * as updateFumc from "../services/updateFunc";
 export async function getAllBeepers(req : Request, res : Response) {
     const beepers = await dal.getAllBeepers()
     if (!beepers) {res.status(404).send("sorry. we don't found beepers"); return}
@@ -7,7 +9,7 @@ export async function getAllBeepers(req : Request, res : Response) {
 }
 export async function createBeeper(req : Request, res : Response) {
     const beeper: dal.Beeper = {
-        id: "1",
+        id: external.generateUUID(),
         name: "a",
         status: dal.Status.manufactured,
         crationDate: new Date(),   
@@ -26,24 +28,24 @@ export async function getBeepersById(req : Request, res : Response) {
     res.send(beeper)  
 }
 export async function updateBeeperById(req : Request, res : Response) {
+    //קבלת מספר מזהה
     const userId = req.params.id
     if (!userId) 
         {res.status(400).send("bad request. missing id"); return}
+    //קבלת תוכן הבקשה
+    const data = req.body
+    //שליפת הביפור המתאים
     const beeper = await dal.getBeepersById(req.params.id)
     if (!beeper) 
         {res.status(404).send("sorry. we don't found beeper"); return}
-    switch (beeper.status) {
-            case dal.Status.manufactured: 
-                { beeper.status = dal.Status.assembled; break}
-            case dal.Status.assembled:
-                { beeper.status = dal.Status.shipped; break}
-            case dal.Status.shipped: 
-                { beeper.status = dal.Status.deployed; break}
-            case dal.Status.deployed:
-                { beeper.status = dal.Status.detonated; break}
-            default: {break }
-        }
-    const answer = await dal.updateBeeper(userId, beeper)
+    //קריאה לפונקציה שתבצע עדכון
+    const midelAnswer = await updateFumc.changeStatus(beeper,data)
+    //במידה וחזרה שגיאה להחזיר אותה למשתמש
+    if (typeof midelAnswer === "string") 
+        {res.status(404).send(midelAnswer); return}    
+    //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס
+    const answer = await dal.updateBeeper(userId, midelAnswer)
+    //עדכון המתמש בעניין השמירה
     if (!answer) {res.status(404).send("sorry. we don't updated beeper"); return}
     res.status(201).send("updated beeper successfully")     
 }
