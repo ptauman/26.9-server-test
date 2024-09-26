@@ -39,6 +39,8 @@ exports.updateBeeperById = updateBeeperById;
 exports.deleteBeepersById = deleteBeepersById;
 exports.getBeepersByStatus = getBeepersByStatus;
 const dal = __importStar(require("../dal"));
+const external = __importStar(require("../services/externalFunc"));
+const updateFumc = __importStar(require("../services/updateFunc"));
 function getAllBeepers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const beepers = yield dal.getAllBeepers();
@@ -52,7 +54,7 @@ function getAllBeepers(req, res) {
 function createBeeper(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const beeper = {
-            id: "1",
+            id: external.generateUUID(),
             name: "a",
             status: dal.Status.manufactured,
             crationDate: new Date(),
@@ -82,42 +84,30 @@ function getBeepersById(req, res) {
 }
 function updateBeeperById(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קבלת מספר מזהה
         const userId = req.params.id;
         if (!userId) {
             res.status(400).send("bad request. missing id");
             return;
         }
+        //קבלת תוכן הבקשה
+        const data = req.body;
+        //שליפת הביפור המתאים
         const beeper = yield dal.getBeepersById(req.params.id);
         if (!beeper) {
             res.status(404).send("sorry. we don't found beeper");
             return;
         }
-        switch (beeper.status) {
-            case dal.Status.manufactured:
-                {
-                    beeper.status = dal.Status.assembled;
-                    break;
-                }
-            case dal.Status.assembled:
-                {
-                    beeper.status = dal.Status.shipped;
-                    break;
-                }
-            case dal.Status.shipped:
-                {
-                    beeper.status = dal.Status.deployed;
-                    break;
-                }
-            case dal.Status.deployed:
-                {
-                    beeper.status = dal.Status.detonated;
-                    break;
-                }
-            default: {
-                break;
-            }
+        //קריאה לפונקציה שתבצע עדכון
+        const midelAnswer = yield updateFumc.changeStatus(beeper, data);
+        //במידה וחזרה שגיאה להחזיר אותה למשתמש
+        if (typeof midelAnswer === "string") {
+            res.status(404).send(midelAnswer);
+            return;
         }
-        const answer = yield dal.updateBeeper(userId, beeper);
+        //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס
+        const answer = yield dal.updateBeeper(userId, midelAnswer);
+        //עדכון המתמש בעניין השמירה
         if (!answer) {
             res.status(404).send("sorry. we don't updated beeper");
             return;
