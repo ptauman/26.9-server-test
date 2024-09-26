@@ -1,56 +1,70 @@
+//ייבוא הדאל
 import * as dal from "../dal"
-const locationPoints: number[] = []
-
-
-export async function changeStatus(beeper: dal.Beeper, data: any):Promise<dal.Beeper|string>{
+//פונקצהי לשינוי סטטוס
+export async function changeStatus(beeper: dal.Beeper, data: any){
+    //תגובה בהתאם לסטטוס קיים
     switch (beeper.status) {
         case dal.Status.manufactured: 
             { beeper.status = dal.Status.assembled; break}
         case dal.Status.assembled:
             { beeper.status = dal.Status.shipped; break}
         case dal.Status.shipped: 
-            {
+            {//במידה והסטטוס הוא "נשלח" נפנה לפונקציה שתבדוק האם אפשר להעביר לססטוס הבא 
                 if (!deployedVais(beeper, data)) 
-                    { return "bad request. missing latitudePoint or longitudePoint or aut off range" }
+                    { return null }
+                //נקרא לפונקציה שתעביר לססטטוס "נפרס" 
                 beeper = updatDeployed(beeper, data)
                 break
             }
+            //בכל מקרה אחר כולל שני הסטטוסים האחרונים לא נעשה דבר 
         default: {break }
-    }
+    }//במידה והכל תקין נחזיר את הביפר העדכני
     return beeper
 }
-
+//פונקציה לבדיקת עדכון פריסה
 function deployedVais(beeper: dal.Beeper, data: any): boolean {
+    //בדיקה שהמשתמש שלח מיקומים
     if (!data.latitudePoint || !data.longitudePoint)
         {return false}
+    //בדיקה שהמיקומים תקינים
     if (data.latitudePoint <33 || data.latitudePoint > 35 || data.longitudePoint < 35 || data.longitudePoint > 36)
         {return false}
     return true
 }
-
+//פונקציה לביצוע פריסה
 function updatDeployed(beeper: dal.Beeper, data: any): dal.Beeper {
+    //עדכון הנקודות המתאימות
     beeper.latitudePoint = data.latitudePoint
     beeper.longitudePoint = data.longitudePoint
+    //עדכון הסטטוס
     beeper.status = dal.Status.deployed
-    //קריאה לפונקציית הטיימר
+    //קריאה לפונקציית הטיימר שתיהיה אחראית להמשך התהליך
     timer10SForUpdateBeeperStatus(beeper)
+    //החזרת הביפר העדכני
     return beeper
 }
+//פונקציית הטיימר
 async function timer10SForUpdateBeeperStatus(beeper: dal.Beeper) {
     try{
+        //המתנת 10 שניות וקריאה לפונקיית עדכון החיסול והעברת הביפר המתאים
         setTimeout( () => { updateDetoneted(beeper) }, 10000)   
     }
     catch{
         return;
     }
 }
+//פונקציית החיסול
 async function updateDetoneted(beeper: dal.Beeper) {
     try{
+        //ככל שאכן יש מספר מזהה
         if(!beeper.id){return}
         const currentbeeper = await dal.getBeepersById(beeper.id)
+        //מציאת הביפר בדאטאבייס כדי למנוע שגיאות בתהליך - אני יודע שלכאורה זה מיותר אבל לא יועיל לא יזיק
         if(!currentbeeper){return}
+        //עדכון הסטטוס וזמן החיסול
         currentbeeper.status = dal.Status.detonated
         currentbeeper.explosionDate = new Date()
+        //קריאה לפונקציית הדאטאבייס שתשמור את השינויים
         dal.updateBeeper(beeper.id, currentbeeper)
     }
     catch{

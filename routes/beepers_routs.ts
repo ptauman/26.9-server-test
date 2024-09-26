@@ -1,6 +1,10 @@
 import express, { Request, Response} from "express";
+
+//ייבוא הקונטולרים
 import * as beepersController from "../controllers/beeprs_controllers"
+//יצירת מופע של אקספרס
 const router = express.Router();
+//הפניית האזנות לפונקציות בקונטרולר
 router.post(`/`,beepersController.createBeeper)
 router.get (`/`,beepersController.getAllBeepers)
 router.get (`/:id`,beepersController.getBeepersById)

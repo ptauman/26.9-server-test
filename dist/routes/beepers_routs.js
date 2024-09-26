@@ -27,8 +27,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+//ייבוא הקונטולרים
 const beepersController = __importStar(require("../controllers/beeprs_controllers"));
+//יצירת מופע של אקספרס
 const router = express_1.default.Router();
+//הפניית האזנות לפונקציות בקונטרולר
 router.post(`/`, beepersController.createBeeper);
 router.get(`/`, beepersController.getAllBeepers);
 router.get(`/:id`, beepersController.getBeepersById);

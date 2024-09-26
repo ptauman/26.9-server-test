@@ -50,9 +50,10 @@ var Status;
     Status[Status["deployed"] = 3] = "deployed";
     Status[Status["detonated"] = 4] = "detonated";
 })(Status || (exports.Status = Status = {}));
+//שליפת כל הביפרים
 function getBeepersFromJson() {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
+        try { //נסיון קריאה מהקובץ
             const beepers = yield jsonfile.readFile('./beepers.json');
             return beepers;
         }
@@ -61,89 +62,117 @@ function getBeepersFromJson() {
         }
     });
 }
+//כתיבה לקובץ
 function createBeepersJson(beepers) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
+        try { //נסיון כתיבה לקובץ  
             yield jsonfile.writeFile('./beepers.json', beepers);
             return true;
         }
+        //עדכון הפוקנציות הקוראות במקרה של כשלון
         catch (err) {
             return false;
         }
     });
 }
+//העברת כל הביפרים
 function getAllBeepers() {
     return __awaiter(this, void 0, void 0, function* () {
+        //קריאה לפונקציית השליפה
         const beepers = yield getBeepersFromJson();
+        //החזרת התשובה
         if (!beepers) {
             return null;
         }
         return beepers;
     });
 }
+//שליפת ביפר לפי מזהה
 function getBeepersById(id) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קריאה לפונקציית השליפה
         const beepers = yield getBeepersFromJson();
+        //בדיקה שאכן קיבלנו משהו
         if (!beepers) {
             return null;
         }
+        //סינון המערך. אני יודע שאפשר לדלג ישר לשלב הבא אבל אני פרנואיד
         const foundBeepers = beepers.filter(beeper => beeper.id === id);
         if (foundBeepers.length === 0) {
             return null;
         }
         const beeper = foundBeepers[0];
+        //החזרת התשובה
         if (!beeper) {
             return null;
         }
         return beeper;
     });
 }
+//שליפת ביפרים לפי סטטוס
 function getBeepersByStatus(status) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קבלת כל הביפרים
         const beepers = yield getBeepersFromJson();
         if (!beepers) {
             return null;
         }
+        //סינון הביפרים המתאימים
         const foundBeepers = beepers.filter(beeper => beeper.status === status);
+        //החזרת תשובה למשתמש
         if (foundBeepers.length === 0) {
             return null;
         }
         return foundBeepers;
     });
 }
+//יצירת ביפר חדש
 function createBeeper(beeper) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קריאה לפונקצייה ששולפת ביפרים
         let beepers = yield getBeepersFromJson();
-        if (!beepers) {
+        //במידה ועדיין אל נוצרה רשימה
+        if (!beepers) { //יצירת רשימה והעברתה לפונקצייתה כתביה לקובץ
             const newBeeprs = [];
             const newAnswer = yield createBeepersJson(newBeeprs);
+            //טיפול במקרי שגיאה
             if (!newAnswer) {
                 return null;
             }
+            //שליפה של רשימת הביפרים
             beepers = yield getBeepersFromJson();
         }
+        //הוספת הביפר לרשימה
         beepers.push(beeper);
+        //קיראה לפונקציית הכתיסה לקובץ והחלפת הרשימה הקיימת
         const answer = yield createBeepersJson(beepers);
         return answer;
     });
 }
+//עדכון ביפר
 function updateBeeper(id, updateBeeper) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קריאה לפונקצייה ששולפת ביפרים
         const beepers = yield getBeepersFromJson();
         if (!beepers) {
             return null;
         }
+        //סינון המערך
         const indexOfBeeper = beepers.findIndex(beeper => beeper.id === id);
         if (indexOfBeeper === -1) {
             return null;
         }
+        //החלפת הביפרים
         beepers[indexOfBeeper] = updateBeeper;
+        //קריאה לפונקציית הכתיבה לקובץ
         const answer = yield createBeepersJson(beepers);
         return answer;
     });
 }
+//מחיקת ביפר
 function deleteBeeper(id) {
     return __awaiter(this, void 0, void 0, function* () {
+        //קריאה לפונקצייה ששולפת ביפרים
         const beepers = yield getBeepersFromJson();
         if (!beepers) {
             return null;
@@ -156,7 +185,9 @@ function deleteBeeper(id) {
         if (!beeper) {
             return null;
         }
+        //סינון המערך ממקום הביפר באיבר אחד
         beepers.splice(beepers.indexOf(beeper), 1);
+        //קריאה לפונקציית הכתיבה לקובץ
         const answer = yield createBeepersJson(beepers);
         return answer;
     });

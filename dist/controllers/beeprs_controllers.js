@@ -38,118 +38,170 @@ exports.getBeepersById = getBeepersById;
 exports.updateBeeperById = updateBeeperById;
 exports.deleteBeepersById = deleteBeepersById;
 exports.getBeepersByStatus = getBeepersByStatus;
+//ייבוא השרתים, הדאל ופונקציות חיצוניות
 const dal = __importStar(require("../dal"));
 const external = __importStar(require("../services/externalFunc"));
 const updateFumc = __importStar(require("../services/updateFunc"));
+//קבלת כל הביפרים
 function getAllBeepers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const beepers = yield dal.getAllBeepers();
-        if (!beepers) {
-            res.status(404).send("sorry. we don't found beepers");
-            return;
+        try {
+            //הבאת הביפרים מהדאל
+            const beepers = yield dal.getAllBeepers();
+            //החזרת תשובה למשתמש כולל טיפול בשגיאה
+            if (!beepers) {
+                res.status(404).send("sorry. we don't found beepers");
+                return;
+            }
+            res.send(beepers);
         }
-        res.send(beepers);
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
+        }
     });
 }
+//יצירת ביפר חדש
 function createBeeper(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const beeper = {
-            id: external.generateUUID(),
-            name: "a",
-            status: dal.Status.manufactured,
-            crationDate: new Date(),
-        };
-        const answer = yield dal.createBeeper(beeper);
-        if (!answer) {
-            res.status(404).send("sorry. we don't created beeper");
-            return;
+        try {
+            //קביעת הערכים הבסיסיים של הביפר
+            const beeper = {
+                //ייבוא מספר גנרי מפונקציה חיצונית
+                id: external.generateUUID(),
+                name: "a",
+                status: dal.Status.manufactured,
+                //קביעת זמן הייצור לרגע זה
+                crationDate: new Date(),
+            };
+            //תשובה למשתמש בהתאם למה שחזר מהדאל כולל טיפול בשגיאות
+            const answer = yield dal.createBeeper(beeper);
+            if (!answer) {
+                res.status(500).send("sorry. we don't created beeper");
+                return;
+            }
+            res.status(201).send("created beeper successfully");
         }
-        res.status(201).send("created beeper successfully");
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
+        }
     });
 }
+//קבלת ביפר מסויים
 function getBeepersById(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const userId = req.params.id;
-        if (!userId) {
-            res.status(400).send("bad request. missing id");
-            return;
+        try {
+            //בדיקת המספר המזהה מהבקשה
+            const userId = req.params.id;
+            if (!userId) {
+                res.status(400).send("bad request. missing id");
+                return;
+            }
+            //שליפת הביפר המתאים
+            const beeper = yield dal.getBeepersById(req.params.id);
+            if (!beeper) {
+                res.status(404).send("sorry. we don't found beeper");
+                return;
+            }
+            //החזרת תשובה למשתמש
+            res.send(beeper);
         }
-        const beeper = yield dal.getBeepersById(req.params.id);
-        if (!beeper) {
-            res.status(404).send("sorry. we don't found beeper");
-            return;
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
         }
-        res.send(beeper);
     });
 }
+//עדכון הסטטוס
 function updateBeeperById(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        //קבלת מספר מזהה
-        const userId = req.params.id;
-        if (!userId) {
-            res.status(400).send("bad request. missing id");
-            return;
+        try {
+            //קבלת מספר מזהה
+            const userId = req.params.id;
+            if (!userId) {
+                res.status(400).send("bad request. missing id");
+                return;
+            }
+            //קבלת תוכן הבקשה
+            const data = req.body;
+            //שליפת הביפור המתאים
+            const beeper = yield dal.getBeepersById(req.params.id);
+            if (!beeper) {
+                res.status(404).send("sorry. we don't found beeper");
+                return;
+            }
+            //קריאה לפונקציה שתבצע עדכון
+            const midelAnswer = yield updateFumc.changeStatus(beeper, data);
+            //במידה וחזרה שגיאה להחזיר אותה למשתמש
+            if (!midelAnswer) {
+                res.status(404).send("bad request. missing latitudePoint or longitudePoint or aut off range");
+                return;
+            }
+            //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס
+            const answer = yield dal.updateBeeper(userId, midelAnswer);
+            //עדכון המשתמש בעניין השמירה
+            if (!answer) {
+                res.status(404).send("sorry. we don't updated beeper");
+                return;
+            }
+            res.status(201).send("updated beeper successfully");
         }
-        //קבלת תוכן הבקשה
-        const data = req.body;
-        //שליפת הביפור המתאים
-        const beeper = yield dal.getBeepersById(req.params.id);
-        if (!beeper) {
-            res.status(404).send("sorry. we don't found beeper");
-            return;
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
         }
-        //קריאה לפונקציה שתבצע עדכון
-        const midelAnswer = yield updateFumc.changeStatus(beeper, data);
-        //במידה וחזרה שגיאה להחזיר אותה למשתמש
-        if (typeof midelAnswer === "string") {
-            res.status(404).send(midelAnswer);
-            return;
-        }
-        //ככל ולא חזרה שגיאה לשמור את העדכון בראטאבייס
-        const answer = yield dal.updateBeeper(userId, midelAnswer);
-        //עדכון המתמש בעניין השמירה
-        if (!answer) {
-            res.status(404).send("sorry. we don't updated beeper");
-            return;
-        }
-        res.status(201).send("updated beeper successfully");
     });
 }
+//מחיקת ביפר
 function deleteBeepersById(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const userId = req.params.id;
-        if (!userId) {
-            res.status(400).send("bad request. missing id");
-            return;
+        try {
+            //קבלת מספר מזהה
+            const userId = req.params.id;
+            if (!userId) {
+                res.status(400).send("bad request. missing id");
+                return;
+            }
+            //קריאה לפונקציית המחיקה בדאל והעברת התשובה למשתמש
+            const answer = yield dal.deleteBeeper(userId);
+            if (!answer) {
+                res.status(400).send("sorry. we don't deleted beeper");
+                return;
+            }
+            res.status(200).send("deleted beeper successfully");
         }
-        const answer = yield dal.deleteBeeper(userId);
-        if (!answer) {
-            res.status(400).send("sorry. we don't deleted beeper");
-            return;
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
         }
-        res.status(200).send("deleted beeper successfully");
     });
 }
+//קבלת ביפרים לפי סטטוס
 function getBeepersByStatus(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const status = req.params.status;
-        if (!status) {
-            res.status(400).send("bad request. missing status");
-            return;
+        try {
+            //בדיקת שהתקבל סטטוס
+            const status = req.params.status;
+            if (!status) {
+                res.status(400).send("bad request. missing status");
+                return;
+            }
+            //בדיקה שהסטטוס תקין
+            if (status !== "manufactured" && status !== "assembled" && status !== "shipped" && status !== "deployed" && status !== "detonated") {
+                res.status(400).send("bad request. wrong status");
+                return;
+            }
+            //קבלת כלל הביפרים לפי סטטוס
+            const beepers = (yield dal.getBeepersByStatus(dal.Status[status])) || [];
+            //בדיקה שאכן קיבלנו משהו תקין והודעה למשתמש
+            if (!beepers) {
+                res.status(404).send("sorry. we don't found beepers for this status");
+                return;
+            }
+            if (beepers.length === 0) {
+                res.status(404).send("sorry. we don't found beepers for this status");
+                return;
+            }
+            res.send(beepers);
         }
-        if (status !== "manufactured" && status !== "assembled" && status !== "shipped" && status !== "deployed" && status !== "detonated") {
-            res.status(400).send("bad request. wrong status");
-            return;
+        catch (error) {
+            res.status(500).send("Something unexpected happened. contact maintenance");
         }
-        const beepers = (yield dal.getBeepersByStatus(dal.Status[status])) || [];
-        if (!beepers) {
-            res.status(404).send("sorry. we don't found beepers for this status");
-            return;
-        }
-        if (beepers.length === 0) {
-            res.status(404).send("sorry. we don't found beepers for this status");
-            return;
-        }
-        res.send(beepers);
     });
 }
